@@ -1,6 +1,6 @@
 package scala.tools.nsc.interactive.tests.core
 
-private[tests] trait Reporter {
+trait Reporter {
   def println(msg: Any): Unit
 }
 

@@ -56,6 +56,7 @@ abstract class InteractiveTest
   with AskReload
   with AskLoadedTyped
   with AskType
+  with AskStructure
   with PresentationCompilerInstance
   with CoreTestDefs
   with InteractiveTestSettings { self =>

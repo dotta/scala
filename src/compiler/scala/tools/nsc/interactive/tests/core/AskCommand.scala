@@ -122,5 +122,11 @@ trait AskLoadedTyped extends AskCommand {
       compiler.askLoadedTyped(source, _)
     }
   }
+}
 
+trait AskStructure extends AskCommand {
+  import compiler.Tree
+  protected def askStructure(source: SourceFile, keepLoaded: Boolean): Response[Tree] = ask {
+    compiler.askStructure(keepLoaded)(source, _)
+  }
 }
