@@ -113,7 +113,7 @@ abstract class InteractiveTest
   private def randomTests(n: Int, files: Array[SourceFile]) {
     val tester = new Tester(n, files, settings) {
       override val compiler = self.compiler
-      override val reporter = compilerReporter
+      override val reporter = new reporters.StoreReporter
     }
     tester.run()
   }
