@@ -67,11 +67,8 @@ trait Namers extends MethodSynthesis {
   // object, we need the templateNamer of that module class.
   // This map is extended during naming of classes, the Namer is added in when
   // it's available, i.e. in the type completer (templateSig) of the module class.
-  private[typechecker] val classAndNamerOfModule = perRunCaches.newMap[Symbol, (ClassDef, Namer)]()
-
-  def resetNamer() {
-    classAndNamerOfModule.clear()
-  }
+  private[typechecker] val classAndNamerOfModule = perRunCaches.newWeakMap[Symbol, WeakReference[ClassDef]]()
+  private case class NamerAttachment(namer: Namer)
 
   abstract class Namer(val context: Context) extends MethodSynth with NamerContextErrors { thisNamer =>
 
@@ -629,7 +626,7 @@ trait Namers extends MethodSynthesis {
       }
       if (hasDefault) {
         val m = ensureCompanionObject(tree)
-        classAndNamerOfModule(m) = (tree, null)
+        classAndNamerOfModule(m) = new WeakReference(tree)
       }
       val owner = tree.symbol.owner
       if (settings.lint.value && owner.isPackageObjectClass && !mods.isImplicit) {
@@ -877,9 +874,8 @@ trait Namers extends MethodSynthesis {
       // if default getters (for constructor defaults) need to be added to that module, here's the namer
       // to use. clazz is the ModuleClass. sourceModule works also for classes defined in methods.
       val module = clazz.sourceModule
-      classAndNamerOfModule get module foreach {
-        case (cdef, _) =>
-          classAndNamerOfModule(module) = (cdef, templateNamer)
+      classAndNamerOfModule get module foreach { cdefRef =>
+        cdefRef().addAttachment(NamerAttachment(templateNamer))
       }
       ClassInfoType(parents, decls, clazz)
     }
@@ -1101,12 +1097,16 @@ trait Namers extends MethodSynthesis {
                 module.initialize // call type completer (typedTemplate), adds the
                                   // module's templateNamer to classAndNamerOfModule
                 classAndNamerOfModule get module match {
-                  case s @ Some((cdef, nmr)) if nmr != null =>
-                    moduleNamer = s
+                  case Some(cdefRef) =>
+                    val cdef = cdefRef()
+                    // by martin: the below can happen in IDE; this is really an ugly hack on top of an ugly hack but it seems to work
+                    // by lukas: disabled when fixing SI-5975, i think it cannot happen anymore
+                    // if (cdef.attachments.get[NamerAttachment].isEmpty) return
+                    val nmr = cdef.attachments.get[NamerAttachment].get.namer
+                    moduleNamer = Some((cdef, nmr))
                     (cdef, nmr)
                   case _ =>
                     return // fix #3649 (prevent crash in erroneous source code)
-                           // nmr == null can happen in IDE; this is really an ugly hack on top[ of an ugly hack but it seems to work
                 }
               }
               deftParams = cdef.tparams map copyUntypedInvariant
