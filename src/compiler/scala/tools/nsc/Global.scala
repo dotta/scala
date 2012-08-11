@@ -1191,7 +1191,9 @@ class Global(var currentSettings: Settings, var reporter: Reporter) extends Symb
       checkDeprecatedSettings(unitbuf.head)
       globalPhase = fromPhase
 
-     while (globalPhase != terminalPhase && !reporter.hasErrors) {
+      def ignoreErrors: Boolean = settings.Xexperimental.value && settings.YelideTypeErrors.value
+      
+     while (globalPhase != terminalPhase && (!reporter.hasErrors || ignoreErrors)) {
         val startTime = currentTime
         phase = globalPhase
 

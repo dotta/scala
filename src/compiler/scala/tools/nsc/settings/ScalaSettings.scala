@@ -94,7 +94,7 @@ trait ScalaSettings extends AbsScalaSettings
 
   // Experimental Extensions
   val Xexperimental = BooleanSetting    ("-Xexperimental", "Enable experimental extensions.") .
-                          withPostSetHook(set => List(YmethodInfer, overrideObjects) foreach (_.value = set.value))
+                          withPostSetHook(set => List(YmethodInfer, overrideObjects, YelideTypeErrors) foreach (_.value = set.value))
                                                    // YdepMethTpes, YvirtClasses,
   val Xmacros       = BooleanSetting    ("-Xmacros", "Enable macros.")
 
@@ -180,7 +180,8 @@ trait ScalaSettings extends AbsScalaSettings
   val noSelfCheck   = BooleanSetting    ("-Yno-self-type-checks", "Suppress check for self-type conformance among inherited members.")
   val YvirtPatmat   = BooleanSetting    ("-Yvirtpatmat", "Translate pattern matches into flatMap/orElse calls. See scala.MatchingStrategy.")
   val YvirtClasses  = false // too embryonic to even expose as a -Y //BooleanSetting    ("-Yvirtual-classes", "Support virtual classes")
-
+  val YelideTypeErrors = BooleanSetting    ("-Yelide-type-errors", "Elide type errors and force bytecode generation.")
+  
   val exposeEmptyPackage = BooleanSetting("-Yexpose-empty-package", "Internal only: expose the empty package.").internalOnly()
   val YnoProductN = BooleanSetting ("-Yno-productN", "Do not add ProductN to case classes")
 
