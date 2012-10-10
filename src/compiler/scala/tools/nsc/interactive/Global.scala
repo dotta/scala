@@ -205,7 +205,7 @@ class Global(settings: Settings, _reporter: Reporter, projectName: String = "")
 
   protected[interactive] var minRunId = 1
 
-  private var interruptsEnabled = true
+  private[interactive] var interruptsEnabled = true
 
   private val NoResponse: Response[_] = new Response[Any]
 
