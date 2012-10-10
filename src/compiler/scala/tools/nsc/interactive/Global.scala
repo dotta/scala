@@ -30,7 +30,6 @@ class Global(settings: Settings, _reporter: Reporter, projectName: String = "")
      with RangePositions
      with ContextTrees
      with RichCompilationUnits
-     with ScratchPadMaker
      with Picklers {
 
   import definitions._
@@ -1040,16 +1039,6 @@ class Global(settings: Settings, _reporter: Reporter, projectName: String = "")
       }
     }
   }
-
-  def getInstrumented(source: SourceFile, line: Int, response: Response[(String, Array[Char])]) =
-    try {
-      interruptsEnabled = false
-      respond(response) {
-        instrument(source, line)
-      }
-    } finally {
-      interruptsEnabled = true
-    }
 
   // ---------------- Helper classes ---------------------------
 
