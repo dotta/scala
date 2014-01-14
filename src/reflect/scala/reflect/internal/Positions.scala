@@ -238,11 +238,15 @@ trait Positions extends api.Positions { self: SymbolTable =>
    *  the smallest tree that encloses `pos`.
    */
   class Locator(pos: Position) extends Traverser {
-    var last: Tree = _
-    def locateIn(root: Tree): Tree = {
-      this.last = EmptyTree
+    var parentsChain: List[Tree] = List(EmptyTree)
+    def last: Tree = parentsChain.head
+
+    final def locateIn(root: Tree): Tree = enclosedIn(root).head 
+    
+    def enclosedIn(root: Tree): List[Tree] = {
+      this.parentsChain = Nil
       traverse(root)
-      this.last
+      if(this.parentsChain.isEmpty) List(EmptyTree) else parentsChain
     }
     protected def isEligible(t: Tree) = !t.pos.isTransparent
     override def traverse(t: Tree) {
@@ -251,7 +255,7 @@ trait Positions extends api.Positions { self: SymbolTable =>
           traverse(tt.original)
         case _ =>
           if (t.pos includes pos) {
-            if (isEligible(t)) last = t
+            if (isEligible(t)) parentsChain = t :: parentsChain
             super.traverse(t)
           } else t match {
             case mdef: MemberDef =>

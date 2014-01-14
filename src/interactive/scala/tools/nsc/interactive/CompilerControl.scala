@@ -79,7 +79,9 @@ trait CompilerControl { self: Global =>
   /** Locate smallest tree that encloses position
    *  @pre Position must be loaded
    */
-  def locateTree(pos: Position): Tree = onUnitOf(pos.source) { unit => new Locator(pos) locateIn unit.body }
+  def locateTree(pos: Position): Tree = enclosedTrees(pos).head
+
+  def enclosedTrees(pos: Position): List[Tree] = onUnitOf(pos.source) { unit => new Locator(pos) enclosedIn unit.body }
 
   /** Locates smallest context that encloses position as an optional value.
    */
@@ -121,6 +123,9 @@ trait CompilerControl { self: Global =>
    */
   def askTypeAt(pos: Position, response: Response[Tree]) =
     postWorkItem(new AskTypeAtItem(pos, response))
+
+  def askEnclosingTreesAt(pos: Position, response: Response[List[Tree]]) =
+    postWorkItem(new AskEnclosingTreesAtItem(pos, response))
 
   /** Sets sync var `response` to the fully attributed & typechecked tree contained in `source`.
    *  @pre `source` needs to be loaded.
@@ -325,6 +330,14 @@ trait CompilerControl { self: Global =>
   case class AskTypeAtItem(pos: Position, response: Response[Tree]) extends WorkItem {
     def apply() = self.getTypedTreeAt(pos, response)
     override def toString = "typeat "+pos.source+" "+pos.show
+
+    def raiseMissing() =
+      response raise new MissingResponse
+  }
+  
+  case class AskEnclosingTreesAtItem(val pos: Position, response: Response[List[Tree]]) extends WorkItem {
+    def apply() = self.getEnclosingTreesAt(pos, response)
+    override def toString = "treeat "+pos.source+" "+pos.show
 
     def raiseMissing() =
       response raise new MissingResponse

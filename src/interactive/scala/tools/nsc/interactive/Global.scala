@@ -783,7 +783,7 @@ class Global(settings: Settings, _reporter: Reporter, projectName: String = "") 
   }
 
   /** A fully attributed tree located at position `pos` */
-  private def typedTreeAt(pos: Position): Tree = getUnit(pos.source) match {
+  private def typedTreeAt(pos: Position): List[Tree] = getUnit(pos.source) match {
     case None =>
       reloadSources(List(pos.source))
       try typedTreeAt(pos)
@@ -791,7 +791,8 @@ class Global(settings: Settings, _reporter: Reporter, projectName: String = "") 
     case Some(unit) =>
       informIDE("typedTreeAt " + pos)
       parseAndEnter(unit)
-      val tree = locateTree(pos)
+      val trees = enclosedTrees(pos)
+      val tree = trees.head
       debugLog("at pos "+pos+" was found: "+tree.getClass+" "+tree.pos.show)
       tree match {
         case Import(expr, _) =>
@@ -800,16 +801,16 @@ class Global(settings: Settings, _reporter: Reporter, projectName: String = "") 
       }
       if (stabilizedType(tree) ne null) {
         debugLog("already attributed: "+tree.symbol+" "+tree.tpe)
-        tree
+        trees
       } else {
         unit.targetPos = pos
         try {
           debugLog("starting targeted type check")
           typeCheck(unit)
 //          println("tree not found at "+pos)
-          EmptyTree
+          List(EmptyTree)
         } catch {
-          case ex: TyperResult => new Locator(pos) locateIn ex.tree
+          case ex: TyperResult => new Locator(pos) enclosedIn ex.tree
         } finally {
           unit.targetPos = NoPosition
         }
@@ -828,8 +829,12 @@ class Global(settings: Settings, _reporter: Reporter, projectName: String = "") 
 
   /** Set sync var `response` to a fully attributed tree located at position `pos`  */
   private[interactive] def getTypedTreeAt(pos: Position, response: Response[Tree]) {
-    respond(response)(typedTreeAt(pos))
+    respond(response)(typedTreeAt(pos).head)
   }
+  
+  private[interactive] def getEnclosingTreesAt(pos: Position, response: Response[List[Tree]]) {
+     respond(response)(typedTreeAt(pos))
+   }
 
   /** Set sync var `response` to a fully attributed tree corresponding to the
    *  entire compilation unit  */
@@ -1069,7 +1074,7 @@ class Global(settings: Settings, _reporter: Reporter, projectName: String = "") 
     //   If pos leads to a Select, type the qualifier as long as it is not erroneous
     //     (this implies discarding the possibly incomplete name in the Select node)
     //   Otherwise, type the tree found at 'pos' directly.
-    val tree0 = typedTreeAt(pos) match {
+    val tree0 = typedTreeAt(pos).head match {
       case sel @ Select(qual, _) if sel.tpe == ErrorType => qual
       case Import(expr, _)                               => expr
       case t                                             => t
