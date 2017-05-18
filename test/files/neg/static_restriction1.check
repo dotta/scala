@@ -1,0 +1,7 @@
+static_restriction1.scala:5: error: @static members are only allowed inside objects
+  @static val field = 1
+              ^
+static_restriction1.scala:7: error: @static members are only allowed inside objects
+  @static def method = 1
+              ^
+two errors found

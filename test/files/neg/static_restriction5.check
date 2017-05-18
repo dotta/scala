@@ -1,0 +1,10 @@
+static_restriction5.scala:5: error: companion classes cannot define members with same name as @static member
+  @static def method = 1
+              ^
+static_restriction5.scala:6: error: companion classes cannot define members with same name as @static member
+  @static val field = 1
+              ^
+static_restriction5.scala:18: error: @static members cannot override or implement non-static ones
+  @static override def method = 1
+                       ^
+three errors found

@@ -116,6 +116,44 @@ abstract class RefChecks extends Transform {
 
     var checkedCombinations = Set[List[Type]]()
 
+    private def checkStaticRestrictions(template: Template, owner: Symbol): Unit = {
+      val defns = template.body.collect{case t: ValOrDefDef => t}
+      var hadNonStaticField = false
+      for(defn <- defns) {
+        if (defn.symbol.hasStaticAnnotation) {
+          if (!owner.isStaticModule) {
+            // FIXME: Maybe the error message should clarify that an object inside a class/trait can't have @static members
+            reporter.error(defn.pos, "@static members are only allowed inside objects")
+          }
+          if (defn.isInstanceOf[ValDef] && hadNonStaticField) {
+            reporter.error(defn.pos, "@static fields should preceed non-static ones")
+          }
+          val companion = owner.companionClass
+          def clashes = companion.info.member(defn.name.getterName)
+
+          //FIXME: Create synthetic companion class. But how can we make sure that a class with the same name doesn't
+          //       exist in a different compilation unit? Dotty currently fails to compile if the companion class
+          //       doesn't exist, but there is no explicit restriction about this in the SIP. Dmitry's rationale for
+          //       not synthetize the class was "This area is a mess and I didn't want to make it worse.".
+          if (!companion.exists) {
+            reporter.error(defn.pos, "object that contains @static members must have companion class")
+          }
+          else if (clashes.exists) {
+            reporter.error(defn.pos, "companion classes cannot define members with same name as @static member")
+          }
+          else if (defn.symbol.isVar && companion.isTrait) {
+            reporter.error(defn.pos, "Companions of traits cannot define mutable @static fields")
+          }
+          else if(defn.symbol.isLazy) {
+            reporter.error(defn.pos, "Lazy @static fields are not supported")
+          }
+          else if (defn.symbol.allOverriddenSymbols.nonEmpty) {
+            reporter.error(defn.pos, "@static members cannot override or implement non-static ones")
+          }
+        }
+        else hadNonStaticField = hadNonStaticField || defn.isInstanceOf[ValDef]
+      }
+    }
     // only one overloaded alternative is allowed to define default arguments
     private def checkOverloadedRestrictions(clazz: Symbol, defaultClass: Symbol): Unit = {
       // Using the default getters (such as methodName$default$1) as a cheap way of
@@ -1720,6 +1758,14 @@ abstract class RefChecks extends Transform {
 
         // skip refchecks in patterns....
         result = result match {
+          case _: ModuleDef | _: ClassDef =>
+            // checking the restrictions here because otherwise `result.symbol` (i.e., the owner) is transformed into a `moduleClass` symbol.
+            // The alternative would be to do the check at line 1650 and call something like `currentOwner.linkedClassOfClass.companionModule`
+            // to retrieve the proper owner, but we would need to handle NoSymbol and fallback to the right symbol, which seems tricky and
+            // error prone.
+            checkStaticRestrictions(result.asInstanceOf[ImplDef].impl, result.symbol)
+            super.transform(result)
+
           case CaseDef(pat, guard, body) =>
             val pat1 = savingInPattern {
               inPattern = true

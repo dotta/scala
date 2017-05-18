@@ -1154,6 +1154,7 @@ trait Definitions extends api.StandardDefinitions {
     lazy val MigrationAnnotationClass   = requiredClass[scala.annotation.migration]
     lazy val ScalaStrictFPAttr          = requiredClass[scala.annotation.strictfp]
     lazy val SwitchClass                = requiredClass[scala.annotation.switch]
+    lazy val StaticClass                = requiredClass[scala.annotation.static]
     lazy val TailrecClass               = requiredClass[scala.annotation.tailrec]
     lazy val VarargsClass               = requiredClass[scala.annotation.varargs]
     lazy val uncheckedStableClass       = requiredClass[scala.annotation.unchecked.uncheckedStable]

@@ -1,0 +1,4 @@
+static_restriction2.scala:8: error: @static fields should preceed non-static ones
+  @static val field2 = 1
+              ^
+one error found

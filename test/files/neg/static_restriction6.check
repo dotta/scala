@@ -1,0 +1,4 @@
+static_restriction6.scala:6: error: Companions of traits cannot define mutable @static fields
+  @static var field2 = 1
+              ^
+one error found

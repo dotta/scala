@@ -897,6 +897,7 @@ trait Symbols extends api.Symbols { self: SymbolTable =>
     def isStrictFP             = hasAnnotation(ScalaStrictFPAttr) || (enclClass hasAnnotation ScalaStrictFPAttr)
     def isSerializable         = info.baseClasses.exists(p => p == SerializableClass || p == JavaSerializableClass)
     def hasBridgeAnnotation    = hasAnnotation(BridgeClass)
+    def hasStaticAnnotation    = hasAnnotation(StaticClass)
     def isDeprecated           = hasAnnotation(DeprecatedAttr)
     def deprecationMessage     = getAnnotation(DeprecatedAttr) flatMap (_ stringArg 0)
     def deprecationVersion     = getAnnotation(DeprecatedAttr) flatMap (_ stringArg 1)

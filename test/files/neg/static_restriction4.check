@@ -1,0 +1,22 @@
+static_restriction4.scala:5: error: companion classes cannot define members with same name as @static member
+  @static def method = 1
+              ^
+static_restriction4.scala:6: error: companion classes cannot define members with same name as @static member
+  @static val field = 1
+              ^
+static_restriction4.scala:16: error: companion classes cannot define members with same name as @static member
+  @static val field1 = 1
+              ^
+static_restriction4.scala:17: error: companion classes cannot define members with same name as @static member
+  @static val field2 = 1
+              ^
+static_restriction4.scala:18: error: companion classes cannot define members with same name as @static member
+  @static val field3 = 1
+              ^
+static_restriction4.scala:19: error: companion classes cannot define members with same name as @static member
+  @static def method1 = 1
+              ^
+static_restriction4.scala:20: error: companion classes cannot define members with same name as @static member
+  @static def method2(x: Int) = 1
+              ^
+7 errors found

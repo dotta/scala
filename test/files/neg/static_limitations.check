@@ -1,0 +1,7 @@
+static_limitations.scala:8: error: Lazy @static fields are not supported
+  @static lazy val field = 1
+                   ^
+static_limitations.scala:15: error: object that contains @static members should have companion class
+  @static val field = 1
+              ^
+two errors found
